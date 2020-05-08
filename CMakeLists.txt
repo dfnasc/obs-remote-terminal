@@ -23,12 +23,12 @@ set(remote-terminal_HEADERS
    obscommandhandler.h
    client.h
    commandserver.h
-   remotecontroldialog.h
+   rt-config.h
 	)
 set(remote-terminal_SOURCES
 	${remote-terminal_SOURCES}
    rt-plugin.cpp
-   remotecontroldialog.cpp
+   rt-config.cpp
    commandserver.cpp
    command.cpp
    obscommandhandler.cpp

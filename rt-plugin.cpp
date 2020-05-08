@@ -7,7 +7,7 @@
 #include <QMainWindow>
 #include <QAction>
 
-#include "remotecontroldialog.h"
+#include "rt-config.h"
 #include "obscommandhandler.h"
 
 #define blog(log_level, format, ...)                    \
@@ -18,7 +18,7 @@
 #define warn(format, ...) blog(LOG_WARNING, format, ##__VA_ARGS__)
 
 OBSCommandHandler *handler;
-RemoteControlDialog *rcUi;
+RTConfigDialog *rcUi;
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("remote-terminal-plugin", "en-US")
@@ -56,7 +56,7 @@ void rc_create_menu() {
 	QMainWindow *window = (QMainWindow *)obs_frontend_get_main_window();
 
 	obs_frontend_push_ui_translation(obs_module_get_string);
-   rcUi = new RemoteControlDialog(window, handler);
+   rcUi = new RTConfigDialog(window, handler);
 	obs_frontend_pop_ui_translation();
 
 	action->connect(action, &QAction::triggered, []{ rcUi->show(); });

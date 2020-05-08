@@ -1,23 +1,23 @@
-#ifndef REMOTECONTROLDIALOG_H
-#define REMOTECONTROLDIALOG_H
+#ifndef RTCONFIGDIALOG_H
+#define RTCONFIGDIALOG_H
 
 #include <QDialog>
 
 #include "commandserver.h"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class RemoteControlDialog; }
+namespace Ui { class RTConfigDialog; }
 QT_END_NAMESPACE
 
 #include "obscommandhandler.h"
 
-class RemoteControlDialog : public QDialog
+class RTConfigDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    RemoteControlDialog(QWidget *parent = nullptr, OBSCommandHandler *handler = nullptr);
-    ~RemoteControlDialog();
+    RTConfigDialog(QWidget *parent = nullptr, OBSCommandHandler *handler = nullptr);
+    ~RTConfigDialog();
 
 private slots:
     void toggleState();
@@ -27,8 +27,8 @@ private slots:
     void clientDisconnected(const QString& remoteAddr, unsigned short remotePort);
 
 private:
-    Ui::RemoteControlDialog *ui;
+    Ui::RTConfigDialog *ui;
     CommandServer *m_cmdServer;
 
 };
-#endif // REMOTECONTROLDIALOG_H
+#endif // RTCONFIGDIALOG_H

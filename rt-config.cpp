@@ -1,17 +1,17 @@
-#include "remotecontroldialog.h"
-#include "./ui_remotecontroldialog.h"
+#include "rt-config.h"
+#include "./ui_rt-config.h"
 
 #include <QDebug>
 #include <QClipboard>
 
-RemoteControlDialog::RemoteControlDialog(QWidget *parent, OBSCommandHandler *handler)
+RTConfigDialog::RTConfigDialog(QWidget *parent, OBSCommandHandler *handler)
     : QDialog(parent)
-    , ui(new Ui::RemoteControlDialog)
+    , ui(new Ui::RTConfigDialog)
 {
     ui->setupUi(this);
 
     ui->lineEditAuthKey->setReadOnly(true);
-    this->setWindowTitle("OBS Remote Terminal Configuration");
+    this->setWindowTitle("Remote Terminal Configuration");
 
     m_cmdServer = CommandServer::instance();
     m_cmdServer->setOBSCommandHandler(handler);
@@ -29,14 +29,12 @@ RemoteControlDialog::RemoteControlDialog(QWidget *parent, OBSCommandHandler *han
     m_cmdServer->start();
 }
 
-RemoteControlDialog::~RemoteControlDialog()
+RTConfigDialog::~RTConfigDialog()
 {
     delete ui;
 }
 
-void RemoteControlDialog::toggleState() {
-
-    qDebug() << "button clicked!";
+void RTConfigDialog::toggleState() {
 
     bool isRunning = m_cmdServer->isListening();
 
@@ -56,7 +54,7 @@ void RemoteControlDialog::toggleState() {
     }
 }
 
-void RemoteControlDialog::copyAuthKey() {
+void RTConfigDialog::copyAuthKey() {
     QClipboard *cb = QApplication::clipboard();
 
     ui->lineEditAuthKey->setSelection(0, ui->lineEditAuthKey->text().length());
@@ -64,19 +62,23 @@ void RemoteControlDialog::copyAuthKey() {
     cb->setText(m_cmdServer->authKey());
 }
 
-void RemoteControlDialog::authKeyRenewed(const QString& key) {
+void RTConfigDialog::authKeyRenewed(const QString& key) {
     
-   qDebug() << "[remote-control] Auth Key: " << key;
+   qDebug() << "\n\n";
+   qDebug() << "[remote-terminal] ************************************************************";
+   qDebug() << "[remote-terminal] Auth Key: " << key;
+   qDebug() << "[remote-terminal] ************************************************************";
+   qDebug() << "\n\n";
 
     ui->lineEditAuthKey->setText(key);
     ui->txtLog->appendHtml("authentication key renewed: <span style=\"font-size: 9pt; font-weight: bold;\">" + key + "</span>");
 }
 
-void RemoteControlDialog::clientConnected(const QString &remoteAddr, unsigned short remotePort) {
+void RTConfigDialog::clientConnected(const QString &remoteAddr, unsigned short remotePort) {
     ui->txtLog->appendHtml("connected: <span style=\"font-size: 8pt; color: green;\">" + remoteAddr + ":" + QString::number(remotePort) + "</span>" );
 }
 
-void RemoteControlDialog::clientDisconnected(const QString &remoteAddr, unsigned short remotePort) {
+void RTConfigDialog::clientDisconnected(const QString &remoteAddr, unsigned short remotePort) {
     ui->txtLog->appendHtml("disconnected: <span style=\"font-size: 8pt; color: green;\">" + remoteAddr + ":" + QString::number(remotePort) + "</span>" );
 }
 
