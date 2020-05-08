@@ -5,7 +5,7 @@ OBS RT is a plugin for OBS Stúdio that allows user to control basic functions t
 ## Supported Commands
 
  * **scenes**               - list available scenes in current profile
- * **scene <index>**        - select scene by index
+ * **scene** &lt;index&gt;    - select scene by index
  * **transition**           - trigger transition button
  * **mute_desk**            - mute desktop audio output
  * **unmute_desk**          - unmute desktop audio output
