@@ -14,11 +14,9 @@ public:
     void setScene(Client *cli, size_t index);
     void transition(Client *cli);
 
-    void muteDesktop(Client *cli);
-    void unmuteDesktop(Client *cli);
-
-    void muteMicrophone(Client *cli);
-    void unmuteMicrophone(Client *cli);
+    void listAudioDevices(Client *cli);
+    void mute(Client *cli, size_t device_index);
+    void unmute(Client *cli, size_t device_index);
 
     void startStreaming(Client *cli);
     void stopStreaming(Client *cli);
