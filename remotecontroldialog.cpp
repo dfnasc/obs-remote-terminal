@@ -11,7 +11,7 @@ RemoteControlDialog::RemoteControlDialog(QWidget *parent, OBSCommandHandler *han
     ui->setupUi(this);
 
     ui->lineEditAuthKey->setReadOnly(true);
-    this->setWindowTitle("OBS Remote Control Server");
+    this->setWindowTitle("OBS Remote Terminal Configuration");
 
     m_cmdServer = CommandServer::instance();
     m_cmdServer->setOBSCommandHandler(handler);

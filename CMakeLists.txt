@@ -1,4 +1,4 @@
-project(remote-control-ui)
+project(remote-terminal)
 
 find_package(Qt5 COMPONENTS Widgets Network REQUIRED)
 
@@ -17,53 +17,53 @@ if(UNIX AND NOT APPLE)
 	include_directories(${X11_INCLUDE_DIR})
 endif()
 
-set(remote-control-ui_HEADERS
-	${remote-control-ui_HEADERS}
+set(remote-terminal_HEADERS
+	${remote-terminal_HEADERS}
    command.h
    obscommandhandler.h
    client.h
    commandserver.h
    remotecontroldialog.h
 	)
-set(remote-control-ui_SOURCES
-	${remote-control-ui_SOURCES}
+set(remote-terminal_SOURCES
+	${remote-terminal_SOURCES}
+   rt-plugin.cpp
+   remotecontroldialog.cpp
+   commandserver.cpp
    command.cpp
    obscommandhandler.cpp
    client.cpp
-   commandserver.cpp
-   remote-control.cpp
-   remotecontroldialog.cpp
 	)
-set(remote-control-ui_UI
-	${remote-control-ui_UI}
+set(remote-terminal_UI
+	${remote-terminal_UI}
 	forms/output.ui
 	)
 
 if(WIN32)
    set(MODULE_DESCRIPTION "OBS Remote Control Server")
-	configure_file(${CMAKE_SOURCE_DIR}/cmake/winrc/obs-module.rc.in remote-control-ui.rc)
-	list(APPEND remote-control-ui_SOURCES
-		remote-control-ui.rc)
+	configure_file(${CMAKE_SOURCE_DIR}/cmake/winrc/obs-module.rc.in remote-terminal.rc)
+	list(APPEND remote-terminal_SOURCES
+		remote-terminal.rc)
 endif()
 
 if(APPLE)
-	set(remote-control-ui_PLATFORM_LIBS
+	set(remote-terminal_PLATFORM_LIBS
 		${COCOA})
 endif()
 
-qt5_wrap_ui(remote-control-ui_UI_HEADERS
-	${remote-control-ui_UI})
+qt5_wrap_ui(remote-terminal_UI_HEADERS
+	${remote-terminal_UI})
 
-add_library(remote-control-ui MODULE
-	${remote-control-ui_HEADERS}
-	${remote-control-ui_SOURCES}
-	${remote-control-ui_UI_HEADERS}
+add_library(remote-terminal MODULE
+	${remote-terminal_HEADERS}
+	${remote-terminal_SOURCES}
+	${remote-terminal_UI_HEADERS}
 	)
-target_link_libraries(remote-control-ui
+target_link_libraries(remote-terminal
 	${frontend-tools_PLATFORM_LIBS}
 	obs-frontend-api
 	Qt5::Widgets
    Qt5::Network
 	libobs)
 
-install_obs_plugin_with_data(remote-control-ui data)
+install_obs_plugin_with_data(remote-terminal data)

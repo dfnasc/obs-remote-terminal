@@ -11,7 +11,7 @@
 #include "obscommandhandler.h"
 
 #define blog(log_level, format, ...)                    \
-	blog(log_level, "[remote-control] " format, ##__VA_ARGS__)
+	blog(log_level, "[remote-terminal-plugin] " format, ##__VA_ARGS__)
 
 #define debug(format, ...) blog(LOG_DEBUG, format, ##__VA_ARGS__)
 #define info(format, ...) blog(LOG_INFO, format, ##__VA_ARGS__)
@@ -21,7 +21,7 @@ OBSCommandHandler *handler;
 RemoteControlDialog *rcUi;
 
 OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("remote-control", "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("remote-terminal-plugin", "en-US")
 MODULE_EXPORT const char *obs_module_description(void)
 {
 	return "Listen for remote commands: transition, start, stop";
@@ -33,7 +33,7 @@ void show_scenes() {
    char *p;
    int count = 0;
 
-   info("Loading remote control service...");
+   info("Loading remote terminal service...");
 
    if (scenes != NULL) {
 
@@ -51,7 +51,7 @@ void show_scenes() {
 void rc_create_menu() {
 
 	QAction *action = (QAction *)obs_frontend_add_tools_menu_qaction(
-		obs_module_text("Remote Control Server"));
+		obs_module_text("Remote Terminal"));
 
 	QMainWindow *window = (QMainWindow *)obs_frontend_get_main_window();
 
