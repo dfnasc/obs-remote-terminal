@@ -19,7 +19,7 @@ CommandServer* CommandServer::instance() {
     return m_instance;
 }
 
-void CommandServer::setup(const QString& bindAddress, unsigned short port) {
+void CommandServer::setup(const QString& bindAddress, int port) {
     setBindAddress(bindAddress);
     setBindPort(port);
 }
@@ -28,17 +28,24 @@ void CommandServer::setBindAddress(const QString& bindAddress) {
     m_addr = bindAddress;
 }
 
-void CommandServer::setBindPort(unsigned short port) {
-    m_port = port;
+void CommandServer::setBindPort(int port) {
+    m_port = (unsigned short)port;
 }
 
 void CommandServer::start() {
-    this->listen(QHostAddress(m_addr), m_port);
+    if (this->listen(QHostAddress(m_addr), m_port)) {
+       emit up(m_addr, m_port);
+    } else {
+       emit error(errorString());
+    }
 }
 
 void CommandServer::stop() {
-
     this->close();
+
+    if (!this->isListening()) {
+       emit down();
+    }
 }
 
 void CommandServer::handleConnection() {

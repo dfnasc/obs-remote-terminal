@@ -17,13 +17,14 @@ RTConfigDialog::RTConfigDialog(QWidget *parent, OBSCommandHandler *handler)
     m_cmdServer->setOBSCommandHandler(handler);
     m_cmdServer->setup(ui->lineEditAddr->text(), (unsigned short)ui->spinBoxPort->value());
 
-    connect(ui->pbStart, SIGNAL(pressed()), this, SLOT(toggleState()));
-    connect(ui->pbNewAuthKey, SIGNAL(pressed()), m_cmdServer, SLOT(renewAuthKey()));
-    connect(ui->pbCopy, SIGNAL(pressed()), this, SLOT(copyAuthKey()));
-    connect(ui->pbClearLog, SIGNAL(pressed()), ui->txtLog, SLOT(clear()));
-    connect(m_cmdServer, SIGNAL(authKeyRenewed(const QString&)), this, SLOT(authKeyRenewed(const QString&)));
-    connect(m_cmdServer, SIGNAL(clientConnected(const QString&, unsigned short)), this, SLOT(clientConnected(const QString&, unsigned short)));
-    connect(m_cmdServer, SIGNAL(clientDisconnected(const QString, unsigned short)), this, SLOT(clientDisconnected(const QString, unsigned short)));
+    connect(ui->pbStart, &QPushButton::pressed, this, &RTConfigDialog::toggleState);
+    connect(ui->pbNewAuthKey, &QPushButton::pressed, m_cmdServer, &CommandServer::renewAuthKey);
+    connect(ui->pbCopy, &QPushButton::pressed, this, &RTConfigDialog::copyAuthKey);
+    connect(ui->pbClearLog, &QPushButton::pressed, ui->txtLog, &QPlainTextEdit::clear);
+    connect(m_cmdServer, &CommandServer::authKeyRenewed, this, &RTConfigDialog::authKeyRenewed);
+    connect(m_cmdServer, &CommandServer::up, this, &RTConfigDialog::serverUp);
+    connect(m_cmdServer, &CommandServer::down, this, &RTConfigDialog::serverDown);
+    connect(m_cmdServer, &CommandServer::error, this, &RTConfigDialog::serverError);
 
     m_cmdServer->renewAuthKey();
     m_cmdServer->start();
@@ -42,15 +43,9 @@ void RTConfigDialog::toggleState() {
     ui->spinBoxPort->setEnabled(isRunning);
 
     if (!isRunning) {
-        ui->txtLog->appendHtml("listening on <span style=\"color: blue; font-size: 8pt;\">" + ui->lineEditAddr->text() +
-                               QString::number(ui->spinBoxPort->value()) + "</span>");
         m_cmdServer->start();
-        ui->pbStart->setText("Stop");
     } else {
-        ui->txtLog->appendPlainText("stopping server...");
         m_cmdServer->stop();
-        ui->txtLog->appendPlainText("server stopped");
-        ui->pbStart->setText("Start");
     }
 }
 
@@ -82,3 +77,20 @@ void RTConfigDialog::clientDisconnected(const QString &remoteAddr, unsigned shor
     ui->txtLog->appendHtml("disconnected: <span style=\"font-size: 8pt; color: green;\">" + remoteAddr + ":" + QString::number(remotePort) + "</span>" );
 }
 
+void RTConfigDialog::serverUp(const QString& addr, unsigned short port) {
+   ui->txtLog->appendHtml(QString("listening at <span style=\"font-size: 8pt;\">%1:%2</span>\n").arg(addr).arg(port));
+   ui->pbStart->setText("Stop");
+   ui->spinBoxPort->setEnabled(false);
+   ui->lineEditAddr->setEnabled(false);
+}
+
+void RTConfigDialog::serverDown() {
+   ui->txtLog->appendHtml("<span style=\"color: orange;\">server is down</span>");
+   ui->pbStart->setText("Start");
+   ui->spinBoxPort->setEnabled(true);
+   ui->lineEditAddr->setEnabled(true);
+}
+
+void RTConfigDialog::serverError(const QString& error) {
+   ui->txtLog->appendHtml(QString("<strong>ERROR: </strong><span style=\"color: red;\">%1</span>").arg(error));
+}

@@ -25,6 +25,9 @@ private slots:
     void authKeyRenewed(const QString& key);
     void clientConnected(const QString& remoteAddr, unsigned short remotePort);
     void clientDisconnected(const QString& remoteAddr, unsigned short remotePort);
+    void serverUp(const QString& addr, unsigned short port);
+    void serverDown();
+    void serverError(const QString& error);
 
 private:
     Ui::RTConfigDialog *ui;
