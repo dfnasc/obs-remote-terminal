@@ -8,8 +8,8 @@ OBS RT is a plugin for OBS Stúdio that allows user to control basic functions t
  * **scene** &lt;index&gt;                                                 - select scene by index
  * **transition**                                                          - trigger transition button
  * **audio_devices**                                                       - list audio devices
- * **mute** &ltdevice index&gt;                                            - mute audio device
- * **unmute** &ltdevice index&gt;                                          - unmute audio device
+ * **mute** &lt;device index&gt;                                            - mute audio device
+ * **unmute** &lt;device index&gt;                                          - unmute audio device
  * **start_streaming**                                                     - start streaming
  * **stop_streaming**                                                      - stop streaming
  * **streaming**                                                           - streaming status <on|off>
