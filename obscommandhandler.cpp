@@ -2,6 +2,8 @@
 
 #include <QDebug>
 #include <QThread>
+#include <QMainWindow>
+#include <QRect>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <obs.hpp>
@@ -78,6 +80,29 @@ void OBSCommandHandler::handleCommand(Client *cli, QString cmd, QStringList args
                emit responseReady(cli, "ERROR", "invalid device index.");
             }
         }
+
+    } else if (cmd == "window_geometry") {
+       
+      if (args.length() == 5) {
+         bool ok;
+         int geometry[4];
+
+         for (int i = 0; i < 4; i++) {
+            geometry[i] = args.at(i+1).toInt(&ok);
+
+            if (!ok)
+               break;
+         }
+
+         if (!ok) {
+            emit responseReady(cli, "ERROR", "invalid parameters. type \"help\" for usage");
+         } else {
+            setWindowGeometry(cli, geometry[0], geometry[1], geometry[2], geometry[3]);
+         }
+
+      } else if (args.length() == 1) {
+         windowGeometry(cli);
+      }
 
     } else if (cmd == "help") {
         sendUsage(cli);
@@ -331,22 +356,52 @@ void OBSCommandHandler::stopRecord(Client *cli) {
    }
 }
 
+void OBSCommandHandler::setWindowGeometry(Client *cli, int x, int y, int w, int h) {
+
+   QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
+
+   if (wnd != nullptr) {
+      wnd->showNormal();
+      wnd->setGeometry(x, y, w, h);
+
+      const QRect g = wnd->geometry();
+
+      emit responseReady(cli, "OK", QString("%1 %2 %3 %4").arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()));
+   } else {
+      emit responseReady(cli, "ERROR", "obs_frontend_get_main_window() return null window");
+   }
+
+}
+
+void OBSCommandHandler::windowGeometry(Client *cli) {
+
+   QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
+
+   if (wnd != nullptr) {
+      const QRect g = wnd->geometry();
+      emit responseReady(cli, "OK", QString("%1 %2 %3 %4").arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()));
+   } else {
+      emit responseReady(cli, "ERROR", "obs_frontend_get_main_window() returned null window");
+   }
+}
+
 void OBSCommandHandler::sendUsage(Client *cli) {
 
     QString usage = "\n\n";
 
-    usage += "scenes                 list profile scenes\n";
-    usage += "scene <index>          select scene by index\n";
-    usage += "transition             switch to selected scene\n";
-    usage += "audio_devices          list available audio devices\n";
-    usage += "mute <device index>    mute audio device\n";
-    usage += "unmute <device_index>  unmute audio audio\n";
-    usage += "start_streaming        start streaming\n";
-    usage += "stop_streaming         stop streaming\n";
-    usage += "streaming              streaming status <on|off>\n";
-    usage += "start_recording        start recording\n";
-    usage += "stop_recording         stop recording\n";
-    usage += "recording              recording status <on|off>\n";
+    usage += "scenes                                        list profile scenes\n";
+    usage += "scene <index>                                 select scene by index\n";
+    usage += "transition                                    switch to selected scene\n";
+    usage += "audio_devices                                 list available audio devices\n";
+    usage += "mute <device index>                           mute audio device\n";
+    usage += "unmute <device_index>                         unmute audio audio\n";
+    usage += "start_streaming                               start streaming\n";
+    usage += "stop_streaming                                stop streaming\n";
+    usage += "streaming                                     streaming status <on|off>\n";
+    usage += "start_recording                               start recording\n";
+    usage += "stop_recording                                stop recording\n";
+    usage += "recording                                     recording status <on|off>\n";
+    usage += "window_geometry [<x> <y> <width> <height>]    get/set obs main window geometry\n";
 
     emit responseReady(cli, "COMMANDS", usage);
 }

@@ -26,6 +26,9 @@ public:
     void stopRecord(Client *cli);
     void recordingStatus(Client *cli);
 
+    void setWindowGeometry(Client *cli, int x, int y, int w, int h);
+    void windowGeometry(Client *cli);
+
     void sendUsage(Client *cli);
 signals:
     void responseReady(Client *cli, QString responseCode, QString responseBody);
