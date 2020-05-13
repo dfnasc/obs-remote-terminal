@@ -31,9 +31,8 @@ public:
 
     void setWindowGeometry(Client *cli, int x, int y, int w, int h);
     void windowGeometry(Client *cli);
-    void showWindow(Client *cli);
+    void showWindow(Client *cli, const QString& mode);
     void hideWindow(Client *cli);
-    void maximizeWindow(Client *cli);
 
     void sendUsage(Client *cli);
 signals:

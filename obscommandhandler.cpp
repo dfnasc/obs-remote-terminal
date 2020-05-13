@@ -191,11 +191,14 @@ void OBSCommandHandler::handleWindowCommand(Client *cli, QStringList args) {
       }
 
    } else if (cmd == "show") {
-      showWindow(cli);
+
+      if (args.length() == 2) {
+         showWindow(cli, args.at(1));
+      } else {
+         showWindow(cli, "normal");
+      }
    } else if (cmd == "hide") {
       hideWindow(cli);
-   } else if (cmd == "maximize") {
-      maximizeWindow(cli);
    } else {
       sendUsage(cli);
    }
@@ -565,12 +568,22 @@ void OBSCommandHandler::windowGeometry(Client *cli) {
    }
 }
 
-void OBSCommandHandler::showWindow(Client *cli) {
+void OBSCommandHandler::showWindow(Client *cli, const QString& mode) {
 
    QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
 
    if (wnd) {
-      wnd->show();
+
+      if (mode == "normal") {
+         wnd->showNormal();
+      } else if (mode == "maximized") {
+         wnd->showMaximized();
+      } else if (mode == "fullscreen") {
+         wnd->showFullScreen();
+      } else {
+         wnd->show();
+      }
+
       emit responseReady(cli, ORT_OK, "done");
    } else {
       emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
@@ -583,19 +596,6 @@ void OBSCommandHandler::hideWindow(Client *cli) {
 
    if (wnd) {
       wnd->hide();
-      emit responseReady(cli, ORT_OK, "done");
-   } else {
-      emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
-   }
-
-}
-
-void OBSCommandHandler::maximizeWindow(Client *cli) {
-
-   QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
-
-   if (wnd) {
-      wnd->showMaximized();
       emit responseReady(cli, ORT_OK, "done");
    } else {
       emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
@@ -629,9 +629,8 @@ void OBSCommandHandler::sendUsage(Client *cli) {
     << "     unmute <device index>                               unmute audio device by index\n"
     << "\n window <action> [<args>...]                            handle OBS main window\n\n"
     << "     geometry [<x> <y> <width> <height>]                 get/set OBS main window geometry\n"
-    << "     show                                                show OBS main window\n"
+    << "     show [<mode>]                                       show OBS main window. Modes: <normal|maximized|fullscreen>\n"
     << "     hide                                                hide OBS main window\n"
-    << "     maximize                                            hide OBS main window\n"
     << "\n";
 
     emit responseReady(cli, "COMMANDS", usage);
