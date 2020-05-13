@@ -8,6 +8,14 @@
 #include <obs-frontend-api.h>
 #include <obs.hpp>
 
+#define ORT_OK    "OK"
+#define ORT_ERROR "ERROR"
+
+#define ORT_ERROR_INVALID_ARG "invalid arguments. Type \"help\" for usage"
+#define ORT_ERROR_INVALID_CFG_NAME "invalid streaming service config. Type \"streaming info\" for more information about streaming config"
+#define ORT_ERROR_INVALID_DEVICE_INDEX "invalid device index."
+#define ORT_ERROR_UNKNOWN "unknown error"
+
 OBSCommandHandler::OBSCommandHandler(QObject *parent)
     : QObject(parent) {
 
@@ -15,100 +23,175 @@ OBSCommandHandler::OBSCommandHandler(QObject *parent)
 
 void OBSCommandHandler::handleCommand(Client *cli, QString cmd, QStringList args) {
 
-    if (cmd == "scenes") {
-        listScenes(cli);
-    } else if (cmd == "scene") {
+   if (args.length() < 2) {
+      if (args.length() > 0) sendUsage(cli);
+      return;
+   }
 
-        if (args.length() != 2) {
-            emit responseReady(cli, "ERROR", "scene index must be informed.");
-        } else {
+   args.removeFirst();
 
-            bool ok;
-            int index = args.at(1).toInt(&ok);
+   if (cmd == "scene") {
+      handleSceneCommand(cli, args);
+   } else if (cmd == "streaming") {
+      handleStreamingCommand(cli, args);
+   } else if (cmd == "recording") {
+      handleRecordingCommand(cli, args);
+   } else if (cmd == "audio") {
+      handleAudioCommand(cli, args);
+   } else if (cmd == "window") {
+      handleWindowCommand(cli, args);
+   } else {
+      sendUsage(cli);
+   }
+}
 
-            if (ok) {
-               setScene(cli, index);
-            } else {
-               emit responseReady(cli, "ERROR", "invalid scene index.");
-            }
-        }
+void OBSCommandHandler::handleSceneCommand(Client *cli, QStringList args) {
 
-    } else if (cmd == "transition") {
-       transition(cli);
-    } else if (cmd == "start_streaming") {
-        startStreaming(cli);
-    } else if (cmd == "stop_streaming") {
-        stopStreaming(cli);
-    } else if (cmd == "streaming") {
-        streamingStatus(cli);
-    } else if (cmd == "start_recording") {
-        startRecord(cli);
-    } else if (cmd == "stop_recording") {
-        stopRecord(cli);
-    } else if (cmd == "recording") {
-        recordingStatus(cli);
-    } else if (cmd == "audio_devices") {
-       listAudioDevices(cli);
-    } else if (cmd == "mute") {
+   QString cmd = args.at(0);
 
-        if (args.length() != 2) {
-            emit responseReady(cli, "ERROR", "audio device index must be informed.");
-        } else {
+   if (cmd == "list") {
+      listScenes(cli);
+   } else if (cmd == "set") {
 
-            bool ok;
-            int index = args.at(1).toInt(&ok);
+      if (args.length() == 2) {
 
-            if (ok) {
-               mute(cli, index);
-            } else {
-               emit responseReady(cli, "ERROR", "invalid device index.");
-            }
-        }
-
-    } else if (cmd == "unmute") {
-
-        if (args.length() != 2) {
-            emit responseReady(cli, "ERROR", "audio device index must be informed.");
-        } else {
-
-            bool ok;
-            int index = args.at(1).toInt(&ok);
-
-            if (ok) {
-               unmute(cli, index);
-            } else {
-               emit responseReady(cli, "ERROR", "invalid device index.");
-            }
-        }
-
-    } else if (cmd == "window_geometry") {
-       
-      if (args.length() == 5) {
          bool ok;
-         int geometry[4];
+         size_t idx;
 
-         for (int i = 0; i < 4; i++) {
-            geometry[i] = args.at(i+1).toInt(&ok);
+         idx = args.at(1).toInt(&ok);
 
-            if (!ok)
-               break;
+         if (ok) {
+            setScene(cli, idx);
+         } else {
+            emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
+         }
+      } else {
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
+      }
+
+   } else if (cmd == "switch") {
+      transition(cli);
+   }
+}
+
+void OBSCommandHandler::handleStreamingCommand(Client *cli, QStringList args) {
+
+   QString cmd = args.at(0);
+
+   if (cmd == "start") {
+      startStreaming(cli);
+   } else if (cmd == "stop") {
+      stopStreaming(cli);
+   } else if (cmd == "status") {
+      streamingStatus(cli);
+   } else if (cmd == "info") {
+      streamingInfo (cli);
+   } else if (cmd == "config") {
+
+      if (args.length() == 3) {
+         configureStreaming(cli, args.at(1), args.at(2));
+      } else {
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
+      }
+   }
+}
+
+void OBSCommandHandler::handleRecordingCommand(Client *cli, QStringList args) {
+
+   QString cmd = args.at(0);
+
+   if (cmd == "start") {
+      startRecord(cli);
+   } else if (cmd == "stop") {
+      stopRecord(cli);
+   } else if (cmd == "status") {
+      recordingStatus(cli);
+   } else {
+      sendUsage(cli);
+   }
+}
+
+void OBSCommandHandler::handleAudioCommand(Client *cli, QStringList args) {
+
+   QString cmd = args.at(0);
+
+   if (cmd == "list") {
+      listAudioDevices(cli);
+   } else if (cmd == "mute") {
+
+      bool ok;
+      size_t deviceIndex;
+
+      if (args.length() == 2) {
+
+         deviceIndex = args.at(1).toInt(&ok);
+
+         if (ok) {
+            mute(cli, deviceIndex);
+         } else {
+            emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
          }
 
-         if (!ok) {
-            emit responseReady(cli, "ERROR", "invalid parameters. type \"help\" for usage");
+      } else {
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
+      }
+      
+   } else if (cmd == "unmute") {
+
+      bool ok;
+      size_t deviceIndex;
+
+      if (args.length() == 2) {
+
+         deviceIndex = args.at(1).toInt(&ok);
+
+         if (ok) {
+            unmute(cli, deviceIndex);
          } else {
-            setWindowGeometry(cli, geometry[0], geometry[1], geometry[2], geometry[3]);
+            emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
+         }
+
+      } else {
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
+      }
+
+   } else {
+      sendUsage(cli);
+   }
+
+}
+
+void OBSCommandHandler::handleWindowCommand(Client *cli, QStringList args) {
+
+   QString cmd = args.at(0);
+
+   if (cmd == "geometry") {
+
+      bool ok;
+      int geo[4];
+
+      if (args.length() == 5) {
+
+         for (int i = 0; i < 4; i++) {
+            geo[i] = args.at(i+1).toInt(&ok);
+            if (!ok) break;
+         }
+
+         if (ok) {
+            setWindowGeometry(cli, geo[0], geo[1], geo[2], geo[3]);
+         } else {
+            emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
          }
 
       } else if (args.length() == 1) {
          windowGeometry(cli);
+      } else {
+         sendUsage(cli);
       }
 
-    } else if (cmd == "help") {
-        sendUsage(cli);
-    } else {
-        emit responseReady(cli, "ERROR", "invalid command. type \"help\" for usage");
-    }
+   } else {
+      sendUsage(cli);
+   }
 }
 
 void OBSCommandHandler::listScenes(Client *cli) {
@@ -135,7 +218,7 @@ void OBSCommandHandler::listScenes(Client *cli) {
       response = "no scene available";
    }
 
-   emit responseReady(cli, "OK", response);
+   emit responseReady(cli, ORT_OK, response);
 }
 
 void OBSCommandHandler::setScene(Client *cli, size_t index) {
@@ -145,19 +228,43 @@ void OBSCommandHandler::setScene(Client *cli, size_t index) {
    obs_frontend_get_scenes(&list);
 
    if (index >= list.sources.num) {
-      emit responseReady(cli, "ERROR", "invalid scene index.");
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_ARG);
    } else {
-      obs_frontend_set_current_preview_scene(list.sources.array[index]);
-      emit responseReady(cli, "OK", "done");
+      obs_source_t *cur = list.sources.array[index];
+      obs_frontend_set_current_preview_scene(cur);
+      emit responseReady(cli, ORT_OK, QString(obs_source_get_name(cur)));
    }
 
    obs_frontend_source_list_free(&list);
 }
 
 void OBSCommandHandler::transition(Client *cli) {
+
+   QString response = "";
+   QTextStream ts(&response);
+   obs_source_t *s;
+
+   s = obs_frontend_get_current_scene();
+
+   if (s) {
+      ts << "[" << QString(obs_source_get_name(s)) << "]";
+      obs_source_release(s);
+   }
+
    obs_frontend_preview_program_trigger_transition();
 
-   emit responseReady(cli, "OK", "done");
+   QThread::msleep(100);
+
+   ts << " <-> ";
+
+   s = obs_frontend_get_current_scene();
+
+   if (s) {
+      ts << "[" << QString(obs_source_get_name(s)) << "]";
+      obs_source_release(s);
+   }
+
+   emit responseReady(cli, ORT_OK, response);
 }
 
 void OBSCommandHandler::listAudioDevices(Client *cli) {
@@ -172,18 +279,27 @@ void OBSCommandHandler::listAudioDevices(Client *cli) {
          continue;
 
       if (obs_source_get_type(src) == OBS_SOURCE_TYPE_INPUT && obs_source_get_output_flags(src) & OBS_SOURCE_AUDIO) {
-         devices.append(QString::number(i) + ":" + QString(obs_source_get_name(src)));
+         QString desc;
+         QTextStream ts(&desc);
+
+         ts << QString::number(i) << ":" << QString(obs_source_get_name(src));
+
+         if (obs_source_muted(src)) {
+            ts << " (muted)";
+         }
+
+         devices.append(desc);
       }
 
       obs_source_release(src);
    }
    
    if (!devices.length()) {
-      emit responseReady(cli, "ERROR", "no output source found.");
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_UNKNOWN);
    } else {
       QString response = "devices:\n\n" + devices.join("\n") + "\n";
 
-      emit responseReady(cli, "OK", response);
+      emit responseReady(cli, ORT_OK, response);
    }
 }
 
@@ -192,7 +308,7 @@ void OBSCommandHandler::mute(Client *cli, size_t device_index) {
       obs_source_t *src = obs_get_output_source(device_index);
 
       if (!src) {
-         emit responseReady(cli, "ERROR", "invalid device index. Use \"audio_devices\" to get device list.");
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_DEVICE_INDEX);
          return;
       }
 
@@ -202,7 +318,7 @@ void OBSCommandHandler::mute(Client *cli, size_t device_index) {
 
       obs_source_release(src);
 
-      emit responseReady(cli, "OK", "muted (" + QString(devname) + ")\n");
+      emit responseReady(cli, ORT_OK, "muted (" + QString(devname) + ")\n");
 }
 
 void OBSCommandHandler::unmute(Client *cli, size_t device_index) {
@@ -210,7 +326,7 @@ void OBSCommandHandler::unmute(Client *cli, size_t device_index) {
       obs_source_t *src = obs_get_output_source(device_index);
 
       if (!src) {
-         emit responseReady(cli, "ERROR", "invalid device index. Use \"audio_devices\" to get device list.");
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_DEVICE_INDEX);
          return;
       }
 
@@ -220,7 +336,7 @@ void OBSCommandHandler::unmute(Client *cli, size_t device_index) {
 
       obs_source_release(src);
 
-      emit responseReady(cli, "OK", "unmuted (" + QString(devname) + ")\n");
+      emit responseReady(cli, ORT_OK, "unmuted (" + QString(devname) + ")\n");
 }
 
 void OBSCommandHandler::startStreaming(Client *cli) {
@@ -286,6 +402,63 @@ void OBSCommandHandler::streamingStatus(Client *cli) {
       emit responseReady(cli, "OK", "active");
    } else {
       emit responseReady(cli, "OK", "inactive");
+   }
+
+}
+
+void OBSCommandHandler::streamingInfo(Client *cli) {
+
+   obs_service_t *svc = obs_frontend_get_streaming_service();
+
+   if (svc == nullptr) {
+      emit responseReady(cli, "OK", "invalid streaming service");
+      return;
+   }
+
+   obs_data_t *settings = obs_service_get_settings(svc);
+   
+   if (settings) {
+
+      const char *json = obs_data_get_json(settings);
+
+      if (json) {
+         emit responseReady(cli, "OK", QString(json));
+      } else {
+         emit responseReady(cli, "ERROR", "could not get service info.");
+      }
+   }
+}
+
+void OBSCommandHandler::configureStreaming(Client *cli, const QString& attr, const QString& value) {
+
+   qDebug() << "CONFIG " << attr << " = " << value;
+
+   obs_service_t *svc = obs_frontend_get_streaming_service();
+
+   if (svc == nullptr) {
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_UNKNOWN);
+      return;
+   }
+
+   obs_data_t *settings = obs_service_get_settings(svc);
+   
+   if (settings) {
+
+      if (obs_data_get_string(settings, attr.toUtf8().data())) {
+
+         QThread::msleep(200);
+         obs_data_set_string(settings, attr.toUtf8().data(), value.toUtf8().data());
+         obs_service_update(svc, settings);
+         obs_frontend_save_streaming_service();
+
+         emit responseReady(cli, ORT_OK, value);
+
+      } else {
+         emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_CFG_NAME);
+      }
+
+   } else {
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_UNKNOWN);
    }
 
 }
@@ -387,21 +560,31 @@ void OBSCommandHandler::windowGeometry(Client *cli) {
 
 void OBSCommandHandler::sendUsage(Client *cli) {
 
-    QString usage = "\n\n";
+    QString usage = "\n";
+    QTextStream ts(&usage);
 
-    usage += "scenes                                        list profile scenes\n";
-    usage += "scene <index>                                 select scene by index\n";
-    usage += "transition                                    switch to selected scene\n";
-    usage += "audio_devices                                 list available audio devices\n";
-    usage += "mute <device index>                           mute audio device\n";
-    usage += "unmute <device_index>                         unmute audio audio\n";
-    usage += "start_streaming                               start streaming\n";
-    usage += "stop_streaming                                stop streaming\n";
-    usage += "streaming                                     streaming status <on|off>\n";
-    usage += "start_recording                               start recording\n";
-    usage += "stop_recording                                stop recording\n";
-    usage += "recording                                     recording status <on|off>\n";
-    usage += "window_geometry [<x> <y> <width> <height>]    get/set obs main window geometry\n";
+    ts << ""
+    << "\n scene <action> [<args>...]                             execute a scene action\n\n"
+    << "     list                                                list available scenes\n"
+    << "     set <scene index>                                   select scene by index.\n"
+    << "     switch                                              switch to scene in preview screen\n"
+    << "\n streaming <action> [<args>...]                         handle streaming\n\n"
+    << "     start                                               start streaming service\n"
+    << "     stop                                                stop streaming service\n"
+    << "     status                                              print streaming service status <active|inactive>\n"
+    << "     info                                                print streaming service type and settings\n"
+    << "     config <attribute_name> <attribute_value>           update a streaming service configuration\n"
+    << "\n recording <action> [<args>...]                         handle streaming\n\n"
+    << "     start                                               start recording\n"
+    << "     stop                                                stop recording\n"
+    << "     status                                              print recording status <active|inactive>\n"
+    << "\n audio <action> [<args>...]                             handle audio devices\n\n"
+    << "     list                                                list audio devices\n"
+    << "     mute <device index>                                 mute audio device by index\n"
+    << "     unmute <device index>                               unmute audio device by index\n"
+    << "\n window <action> [<args>...]                            handle obs main window\n\n"
+    << "     geometry [<x> <y> <width> <height>]                 get/set obs main window geometry\n"
+    << "\n";
 
     emit responseReady(cli, "COMMANDS", usage);
 }

@@ -21,10 +21,13 @@ public:
     void startStreaming(Client *cli);
     void stopStreaming(Client *cli);
     void streamingStatus(Client *cli);
+    void streamingInfo(Client *cli);
+    void configureStreaming(Client *cli, const QString& attr, const QString& value);
 
     void startRecord(Client *cli);
     void stopRecord(Client *cli);
     void recordingStatus(Client *cli);
+
 
     void setWindowGeometry(Client *cli, int x, int y, int w, int h);
     void windowGeometry(Client *cli);
@@ -34,6 +37,13 @@ signals:
     void responseReady(Client *cli, QString responseCode, QString responseBody);
 public slots:
     void handleCommand(Client *cli, QString cmd, QStringList args);
+
+private slots:
+    void handleSceneCommand(Client *cli, QStringList args);
+    void handleStreamingCommand(Client *cli, QStringList args);
+    void handleRecordingCommand(Client *cli, QStringList args);
+    void handleAudioCommand(Client *cli, QStringList args);
+    void handleWindowCommand(Client *cli, QStringList args);
 };
 
 #endif // OBSCOMMANDHANDLER_H
