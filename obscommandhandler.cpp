@@ -13,7 +13,8 @@
 
 #define ORT_ERROR_INVALID_ARG "invalid arguments. Type \"help\" for usage"
 #define ORT_ERROR_INVALID_CFG_NAME "invalid streaming service config. Type \"streaming info\" for more information about streaming config"
-#define ORT_ERROR_INVALID_DEVICE_INDEX "invalid device index."
+#define ORT_ERROR_INVALID_DEVICE_INDEX "invalid device index"
+#define ORT_ERROR_INVALID_WINDOW "invalid OBS main window reference"
 #define ORT_ERROR_UNKNOWN "unknown error"
 
 OBSCommandHandler::OBSCommandHandler(QObject *parent)
@@ -189,6 +190,12 @@ void OBSCommandHandler::handleWindowCommand(Client *cli, QStringList args) {
          sendUsage(cli);
       }
 
+   } else if (cmd == "show") {
+      showWindow(cli);
+   } else if (cmd == "hide") {
+      hideWindow(cli);
+   } else if (cmd == "maximize") {
+      maximizeWindow(cli);
    } else {
       sendUsage(cli);
    }
@@ -554,8 +561,46 @@ void OBSCommandHandler::windowGeometry(Client *cli) {
       const QRect g = wnd->geometry();
       emit responseReady(cli, "OK", QString("%1 %2 %3 %4").arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()));
    } else {
-      emit responseReady(cli, "ERROR", "obs_frontend_get_main_window() returned null window");
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
    }
+}
+
+void OBSCommandHandler::showWindow(Client *cli) {
+
+   QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
+
+   if (wnd) {
+      wnd->show();
+      emit responseReady(cli, ORT_OK, "done");
+   } else {
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
+   }
+}
+
+void OBSCommandHandler::hideWindow(Client *cli) {
+
+   QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
+
+   if (wnd) {
+      wnd->hide();
+      emit responseReady(cli, ORT_OK, "done");
+   } else {
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
+   }
+
+}
+
+void OBSCommandHandler::maximizeWindow(Client *cli) {
+
+   QMainWindow *wnd = (QMainWindow*)obs_frontend_get_main_window();
+
+   if (wnd) {
+      wnd->showMaximized();
+      emit responseReady(cli, ORT_OK, "done");
+   } else {
+      emit responseReady(cli, ORT_ERROR, ORT_ERROR_INVALID_WINDOW);
+   }
+
 }
 
 void OBSCommandHandler::sendUsage(Client *cli) {
@@ -582,8 +627,11 @@ void OBSCommandHandler::sendUsage(Client *cli) {
     << "     list                                                list audio devices\n"
     << "     mute <device index>                                 mute audio device by index\n"
     << "     unmute <device index>                               unmute audio device by index\n"
-    << "\n window <action> [<args>...]                            handle obs main window\n\n"
-    << "     geometry [<x> <y> <width> <height>]                 get/set obs main window geometry\n"
+    << "\n window <action> [<args>...]                            handle OBS main window\n\n"
+    << "     geometry [<x> <y> <width> <height>]                 get/set OBS main window geometry\n"
+    << "     show                                                show OBS main window\n"
+    << "     hide                                                hide OBS main window\n"
+    << "     maximize                                            hide OBS main window\n"
     << "\n";
 
     emit responseReady(cli, "COMMANDS", usage);

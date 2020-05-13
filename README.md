@@ -33,3 +33,6 @@ OBS RT is a plugin for OBS Stúdio that allows user to control basic functions t
  - **window** &lt;action&gt; [&lt;args&gt;...] - handle obs main window
 
      - **geometry** [&lt;x&gt; &lt;y&gt; &lt;width&gt; &lt;height&gt;] - get/set obs main window geometry
+     - **show** - show obs main window
+     - **hide** - hide obs main window
+     - **maximize - show obs main window maximized
